@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const fullName = document.getElementById("fullName").value.trim();
             const phone = document.getElementById("phone").value.trim();
-            const email = document.getElementById("email").value.trim();
+            const email = document.getElementById("email").value.trim().toLowerCase(); // Luôn viết thường email để tránh lỗi so khớp viết hoa
             const password = document.getElementById("password").value;
             const confirm = document.getElementById("confirm").value;
 
@@ -33,19 +33,27 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             // ================= LOGIC FIREBASE REALTIME DATABASE =================
-            // Đọc toàn bộ nhánh "users" trên Firebase để đối chiếu trùng lặp email
+            // Đọc toàn bộ nhánh "users" trên Firebase để đối chiếu trùng lặp email và số điện thoại
             window.database.ref("users").once("value")
                 .then((snapshot) => {
                     const usersData = snapshot.val() || {};
 
-                    // Kiểm tra email đã tồn tại hay chưa
-                    const emailExists = Object.values(usersData).some(user => user.email === email);
+                    // Kiểm tra trùng Email
+                    const emailExists = Object.values(usersData).some(user => {
+                        return user.email && user.email.toLowerCase() === email;
+                    });
 
                     if (emailExists) {
-                        errorBox.innerText = "Email đã tồn tại trên hệ thống.";
-                        errorBox.style.display = "block";
-                        // Trả về một giá trị đặc biệt hoặc reject để ngắt chuỗi promise tiếp theo
-                        return Promise.reject("EMAIL_EXISTS");
+                        throw new Error("EMAIL_EXISTS"); // Dùng throw new Error sẽ an toàn và ngắt Promise chuẩn hơn
+                    }
+
+                    // Kiểm tra trùng Số điện thoại (Tránh lỗi trùng số điện thoại)
+                    const phoneExists = Object.values(usersData).some(user => {
+                        return user.phone && user.phone.trim() === phone;
+                    });
+
+                    if (phoneExists) {
+                        throw new Error("PHONE_EXISTS");
                     }
 
                     // Tạo đối tượng thành viên mới
@@ -56,11 +64,11 @@ document.addEventListener("DOMContentLoaded", function () {
                         password: password
                     };
 
-                    // Đẩy dữ liệu lên nhánh "users"
+                    // Đẩy dữ liệu lên nhánh "users" và trả về promise
                     return window.database.ref("users").push(newUser);
                 })
-                .then((ref) => {
-                    // Nếu đẩy thành công
+                .then(() => {
+                    // CHỈ KHI đẩy thành công hoàn toàn lên Firebase Realtime Database
                     successBox.innerText = "Đăng ký thành công! Đang chuyển sang đăng nhập...";
                     successBox.style.display = "block";
 
@@ -69,9 +77,14 @@ document.addEventListener("DOMContentLoaded", function () {
                     }, 2000);
                 })
                 .catch((error) => {
-                    if (error === "EMAIL_EXISTS") return; // Lỗi này đã được xử lý hiển thị ở trên
-                    
-                    errorBox.innerText = "Có lỗi xảy ra: " + error.message;
+                    // Xử lý các trường hợp lỗi
+                    if (error.message === "EMAIL_EXISTS") {
+                        errorBox.innerText = "Email đã tồn tại trên hệ thống.";
+                    } else if (error.message === "PHONE_EXISTS") {
+                        errorBox.innerText = "Số điện thoại đã tồn tại trên hệ thống.";
+                    } else {
+                        errorBox.innerText = "Có lỗi kết nối Firebase: " + error.message;
+                    }
                     errorBox.style.display = "block";
                 });
         });
