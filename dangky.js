@@ -4,50 +4,75 @@ document.addEventListener("DOMContentLoaded", function () {
     const errorBox = document.getElementById("errorBox");
     const successBox = document.getElementById("successBox");
 
+    // Tự động ẩn các hộp thông báo lỗi/thành công khi load trang
+    if (errorBox) errorBox.style.display = "none";
+    if (successBox) successBox.style.display = "none";
+
     if (form) {
         form.addEventListener("submit", function (e) {
             e.preventDefault();
 
+            // KIỂM TRA ĐỀ PHÒNG FIREBASE CHƯA KHỞI TẠO XONG
+            if (!window.database) {
+                showError("Hệ thống đang khởi động, vui lòng thử lại sau 2 giây!");
+                return;
+            }
+
             const fullName = document.getElementById("fullName").value.trim();
             const phone = document.getElementById("phone").value.trim();
-            const email = document.getElementById("email").value.trim().toLowerCase(); // Luôn viết thường email để tránh lỗi so khớp viết hoa
+            const email = document.getElementById("email").value.trim().toLowerCase();
             const password = document.getElementById("password").value;
             const confirm = document.getElementById("confirm").value;
 
-            // Ẩn các hộp thông báo lỗi/thành công trước đó
-            errorBox.style.display = "none";
-            successBox.style.display = "none";
+            // 1. Kiểm tra không được bỏ trống thông tin
+            if (!fullName || !phone || !email || !password || !confirm) {
+                showError("Vui lòng điền đầy đủ tất cả các trường thông tin.");
+                return;
+            }
 
-            // 1. Kiểm tra độ dài mật khẩu
+            // 2. Kiểm tra định dạng số điện thoại cơ bản (ít nhất 9-11 số)
+            const phoneRegex = /^[0-9]{9,11}$/;
+            if (!phoneRegex.test(phone)) {
+                showError("Số điện thoại không hợp lệ (Chỉ nhập số, từ 9-11 ký tự).");
+                return;
+            }
+
+            // 3. Kiểm tra độ dài mật khẩu
             if (password.length < 6) {
-                errorBox.innerText = "Mật khẩu phải từ 6 ký tự trở lên.";
-                errorBox.style.display = "block";
+                showError("Mật khẩu phải từ 6 ký tự trở lên.");
                 return;
             }
 
-            // 2. Kiểm tra mật khẩu khớp nhau
+            // 4. Kiểm tra mật khẩu khớp nhau
             if (password !== confirm) {
-                errorBox.innerText = "Mật khẩu nhập lại không khớp.";
-                errorBox.style.display = "block";
+                showError("Mật khẩu nhập lại không khớp.");
                 return;
             }
+
+            // Vô hiệu hóa nút Đăng ký để chống bấm đúp gửi dữ liệu trùng
+            const submitBtn = form.querySelector("button[type='submit']");
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerText = "Đang xử lý...";
+            }
+
+            showSuccess("Đang kiểm tra thông tin trên hệ thống...");
 
             // ================= LOGIC FIREBASE REALTIME DATABASE =================
-            // Đọc toàn bộ nhánh "users" trên Firebase để đối chiếu trùng lặp email và số điện thoại
             window.database.ref("users").once("value")
                 .then((snapshot) => {
                     const usersData = snapshot.val() || {};
 
                     // Kiểm tra trùng Email
                     const emailExists = Object.values(usersData).some(user => {
-                        return user.email && user.email.toLowerCase() === email;
+                        return user.email && user.email.toLowerCase().trim() === email;
                     });
 
                     if (emailExists) {
-                        throw new Error("EMAIL_EXISTS"); // Dùng throw new Error sẽ an toàn và ngắt Promise chuẩn hơn
+                        throw new Error("EMAIL_EXISTS");
                     }
 
-                    // Kiểm tra trùng Số điện thoại (Tránh lỗi trùng số điện thoại)
+                    // Kiểm tra trùng Số điện thoại
                     const phoneExists = Object.values(usersData).some(user => {
                         return user.phone && user.phone.trim() === phone;
                     });
@@ -61,33 +86,50 @@ document.addEventListener("DOMContentLoaded", function () {
                         fullName: fullName,
                         phone: phone,
                         email: email,
-                        password: password
+                        password: password.trim() // Trim mật khẩu để tránh khoảng trắng thừa do gõ lỗi
                     };
 
-                    // Đẩy dữ liệu lên nhánh "users" và trả về promise
+                    // Đẩy dữ liệu lên nhánh "users" trên Firebase
                     return window.database.ref("users").push(newUser);
                 })
                 .then(() => {
-                    // CHỈ KHI đẩy thành công hoàn toàn lên Firebase Realtime Database
-                    successBox.innerText = "Đăng ký thành công! Đang chuyển sang đăng nhập...";
-                    successBox.style.display = "block";
+                    showSuccess("Đăng ký tài khoản thành công! Đang chuyển hướng...");
 
                     setTimeout(() => {
                         window.location.href = "dangnhap.html";
                     }, 2000);
                 })
                 .catch((error) => {
-                    // Xử lý các trường hợp lỗi
-                    if (error.message === "EMAIL_EXISTS") {
-                        errorBox.innerText = "Email đã tồn tại trên hệ thống.";
-                    } else if (error.message === "PHONE_EXISTS") {
-                        errorBox.innerText = "Số điện thoại đã tồn tại trên hệ thống.";
-                    } else {
-                        errorBox.innerText = "Có lỗi kết nối Firebase: " + error.message;
+                    // Mở lại nút bấm khi gặp lỗi để người dùng sửa thông tin và gửi lại
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerText = "Đăng Ký";
                     }
-                    errorBox.style.display = "block";
+
+                    if (error.message === "EMAIL_EXISTS") {
+                        showError("Email này đã được sử dụng trên hệ thống.");
+                    } else if (error.message === "PHONE_EXISTS") {
+                        showError("Số điện thoại này đã được sử dụng trên hệ thống.");
+                    } else {
+                        showError("Lỗi kết nối máy chủ: " + error.message);
+                    }
                 });
         });
+    }
+
+    // Các hàm phụ hiển thị thông báo đẹp mắt
+    function showError(msg) {
+        if (!errorBox) return;
+        errorBox.innerText = msg;
+        errorBox.style.display = "block";
+        if (successBox) successBox.style.display = "none";
+    }
+
+    function showSuccess(msg) {
+        if (!successBox) return;
+        successBox.innerText = msg;
+        successBox.style.display = "block";
+        if (errorBox) errorBox.style.display = "none";
     }
 
     // ================= HIỂN THỊ TRẠNG THÁI KHÁCH HÀNG (USERBOX) =================
@@ -100,8 +142,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (isLogin === "true" && currentUser) {
             userBox.innerHTML = `
                 <div class="user-info">
-                    <span>${currentUser.fullName}</span>
-                    <button id="logoutBtn">Đăng xuất</button>
+                    <span>Xin chào, <strong>${currentUser.fullName}</strong></span>
+                    <button id="logoutBtn" style="margin-left: 10px;">Đăng xuất</button>
                 </div>
             `;
 

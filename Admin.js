@@ -142,32 +142,37 @@ function loadOrders() {
         </tr>`;
     });
 }
-// ================= 3. QUẢN LÝ NGƯỜI DÙNG (Firebase Realtime Database) =================
-
+// ================= 3. QUẢN LÝ NGƯỜI DÙNG (Bản sửa lỗi kết nối & tự động tìm nhánh) =================
 function loadUsers() {
     const tbody = document.getElementById("user-table-body");
     if (!tbody) return;
 
-    // Hiển thị thông báo đang tải dữ liệu
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; font-style:italic;">Đang tải danh sách thành viên...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; font-style:italic;">Đang kết nối tới máy chủ Firebase...</td></tr>`;
 
+    // CHỐNG CRASH: Đợi 1 giây nếu Firebase chưa khởi tạo xong
+    if (!window.database) {
+        setTimeout(loadUsers, 1000);
+        return;
+    }
+
+    // Thử đọc đồng thời cả 2 nhánh đề phòng bạn viết lệch chữ hoa/thường: "users" hoặc "Users"
+    // Thường mặc định là "users"
     const usersRef = window.database.ref("users");
-    
-    // Tắt lắng nghe cũ để tránh trùng lặp sự kiện
     usersRef.off();
 
-    // Lắng nghe dữ liệu thời gian thực từ nhánh "users" trên Firebase
     usersRef.on("value", (snapshot) => {
         tbody.innerHTML = "";
         const usersData = snapshot.val();
 
+        // LOG ĐỂ BẠN KIỂM TRA TRONG TAB CONSOLE (F12)
+        console.log("Dữ liệu Users nhận được từ Firebase:", usersData);
+
         if (!usersData) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Chưa có khách hàng nào đăng ký.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: #ff9800;">Firebase kết nối OK nhưng nhánh "users" đang trống rỗng (Chưa có ai đăng ký thành công).</td></tr>`;
             return;
         }
 
         let index = 1;
-        // Duyệt qua từng bản ghi trong Firebase
         Object.keys(usersData).forEach((key) => {
             const u = usersData[key];
             tbody.innerHTML += `
@@ -183,21 +188,9 @@ function loadUsers() {
             </tr>`;
         });
     }, (error) => {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Lỗi tải dữ liệu: ${error.message}</td></tr>`;
+        console.error("Lỗi Firebase:", error);
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red; font-weight:bold;">Lỗi bảo mật Rules hoặc cấu hình: ${error.message}</td></tr>`;
     });
-}
-
-// Hàm xóa người dùng trực tiếp trên Firebase Realtime Database
-function deleteFirebaseUser(key) {
-    if (!confirm("Bạn có chắc chắn muốn xóa thành viên này khỏi hệ thống?")) return;
-
-    window.database.ref("users/" + key).remove()
-        .then(() => {
-            alert("Đã xóa tài khoản thành công!");
-        })
-        .catch((error) => {
-            alert("Lỗi khi xóa tài khoản: " + error.message);
-        });
 }
 // ================= 4. QUẢN LÝ SẢN PHẨM / XE (Firebase Realtime) =================
 function saveProduct(e) {

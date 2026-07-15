@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-    const loginForm = document.getElementById("loginForm"); // Nên bọc form đăng nhập bằng thẻ <form id="loginForm">
+    const loginForm = document.getElementById("loginForm");
     const loginBtn = document.getElementById("loginBtn");
     const userBox = document.getElementById("userBox");
     const loginMessage = document.getElementById("loginMessage");
@@ -12,8 +12,8 @@ document.addEventListener("DOMContentLoaded", function () {
     if (userBox) {
         if (isLogin === "true" && currentUser) {
             userBox.innerHTML = `
-                <span>${currentUser.fullName}</span>
-                <a href="#" id="logoutBtn">Đăng xuất</a>
+                <span>Xin chào, <strong>${currentUser.fullName}</strong></span>
+                <a href="#" id="logoutBtn" style="margin-left: 10px; color: red;">Đăng xuất</a>
             `;
 
             const logoutBtn = document.getElementById("logoutBtn");
@@ -36,17 +36,31 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // ================= 2. XỬ LÝ ĐĂNG NHẬP (FIREBASE) =================
-    // Hàm thực hiện đăng nhập chính
     function thucHienDangNhap() {
+        // KIỂM TRA ĐỀ PHÒNG FIREBASE CHƯA TẢI XONG
+        if (!window.database) {
+            showLoginError("Hệ thống đang khởi động, vui lòng thử lại sau 2 giây!");
+            return;
+        }
+
         const accountInput = document.getElementById("loginAccount");
         const passwordInput = document.getElementById("loginPassword");
 
         if (!accountInput || !passwordInput) return;
 
-        const account = accountInput.value.trim().toLowerCase(); // Chuyển thông tin nhập về chữ thường
-        const password = passwordInput.value;
+        const account = accountInput.value.trim().toLowerCase(); 
+        const password = passwordInput.value.trim(); // Thêm .trim() để loại bỏ dấu cách thừa
 
-        if (loginMessage) loginMessage.innerHTML = ""; // Reset thông báo lỗi trước đó
+        if (account === "" || password === "") {
+            showLoginError("Vui lòng điền đầy đủ tài khoản và mật khẩu.");
+            return;
+        }
+
+        if (loginMessage) loginMessage.innerHTML = "<span style='color: #ff9800;'>Đang xác thực thông tin...</span>"; 
+
+        // Vô hiệu hóa nút bấm tạm thời tránh việc người dùng click liên tục
+        const activeBtn = loginForm ? loginForm.querySelector("button[type='submit']") : loginBtn;
+        if (activeBtn) activeBtn.disabled = true;
 
         // ===== TRƯỜNG HỢP: ADMIN CỐ ĐỊNH =====
         if (account === "admin" && password === "admin@dragon") {
@@ -64,58 +78,62 @@ document.addEventListener("DOMContentLoaded", function () {
         // ===== TRƯỜNG HỢP: USER THƯỜNG (Firebase) =====
         window.database.ref("users").once("value")
             .then((snapshot) => {
+                if (activeBtn) activeBtn.disabled = false;
                 const usersData = snapshot.val() || {};
                 
                 // Tìm kiếm thông tin khớp tài khoản
                 const foundUserKey = Object.keys(usersData).find(key => {
                     const user = usersData[key];
                     
-                    // Đưa email và số điện thoại trên db về dạng chữ thường an toàn
                     const userEmail = user.email ? user.email.toLowerCase().trim() : "";
                     const userPhone = user.phone ? user.phone.toLowerCase().trim() : "";
+                    const userPassword = user.password ? user.password.trim() : ""; // Cắt khoảng trắng đầu đuôi của DB
                     
                     const isAccountMatch = (userEmail === account || userPhone === account);
-                    const isPasswordMatch = (user.password === password);
+                    const isPasswordMatch = (userPassword === password);
                     
                     return isAccountMatch && isPasswordMatch;
                 });
 
                 if (foundUserKey) {
-                    // Đăng nhập thành công -> Lưu dữ liệu session
                     const loggedInUser = usersData[foundUserKey];
 
                     localStorage.setItem("isLogin", "true");
                     localStorage.setItem("currentUser", JSON.stringify(loggedInUser));
                     localStorage.setItem("role", "user");
 
-                    window.location.href = "index.html";
+                    if (loginMessage) loginMessage.innerHTML = "<span style='color: green;'>Đăng nhập thành công! Đang chuyển hướng...</span>";
+
+                    setTimeout(() => {
+                        window.location.href = "index.html";
+                    }, 1000);
                 } else {
-                    showLoginError("Sai tài khoản hoặc mật khẩu!");
+                    showLoginError("Tài khoản hoặc mật khẩu không chính xác!");
                 }
             })
             .catch((error) => {
-                showLoginError("Lỗi kết nối hệ thống: " + error.message);
+                if (activeBtn) activeBtn.disabled = false;
+                showLoginError("Lỗi kết nối máy chủ: " + error.message);
             });
     }
 
-    // Gán sự kiện submit vào Form (Nếu có thẻ Form) để hỗ trợ cả nút bấm lẫn phím Enter
+    // Gán sự kiện cho Form / Button
     if (loginForm) {
         loginForm.addEventListener("submit", function (e) {
             e.preventDefault();
             thucHienDangNhap();
         });
     } else if (loginBtn) {
-        // Dự phòng nếu giao diện của bạn không dùng thẻ <form>, gán sự kiện click vào button
         loginBtn.addEventListener("click", function (e) {
             e.preventDefault();
             thucHienDangNhap();
         });
     }
 
-    // Hàm phụ hiển thị lỗi đăng nhập nhanh
+    // Hàm phụ hiển thị lỗi đẹp mắt trực tiếp trên form
     function showLoginError(msg) {
         if (loginMessage) {
-            loginMessage.innerHTML = msg;
+            loginMessage.innerHTML = `<span style="color: red; font-weight: bold;">${msg}</span>`;
         } else {
             alert(msg);
         }

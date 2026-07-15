@@ -8,16 +8,22 @@ document.addEventListener("DOMContentLoaded", function () {
     const errorBox = document.getElementById("errorBox");
     const successBox = document.getElementById("successBox");
 
+    // Tự động ẩn các hộp thông báo khi mới tải trang
+    if (errorBox) errorBox.style.display = "none";
+    if (successBox) successBox.style.display = "none";
+
     function showError(msg) {
+        if (!errorBox) return;
         errorBox.textContent = msg;
         errorBox.style.display = "block";
-        successBox.style.display = "none";
+        if (successBox) successBox.style.display = "none";
     }
 
     function showSuccess(msg) {
+        if (!successBox) return;
         successBox.textContent = msg;
         successBox.style.display = "block";
-        errorBox.style.display = "none";
+        if (errorBox) errorBox.style.display = "none";
     }
 
     // ================= STEP 1: XÁC MINH TÀI KHOẢN =================
@@ -32,9 +38,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
+            // Chống tình trạng nhấn gửi liên tiếp khi đang xử lý
+            const submitBtn = step1.querySelector("button[type='submit']");
+            if (submitBtn) submitBtn.disabled = true;
+
+            showSuccess("Đang xác thực tài khoản trên hệ thống...");
+
             // Đọc dữ liệu từ Firebase Realtime Database
             window.database.ref("users").once("value")
                 .then((snapshot) => {
+                    if (submitBtn) submitBtn.disabled = false;
                     const usersData = snapshot.val() || {};
 
                     // Tìm Key của user có email hoặc số điện thoại trùng khớp
@@ -52,10 +65,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     // Tài khoản hợp lệ -> Chuyển sang Bước 2
                     step1.style.display = "none";
-                    step2.style.display = "block";
-                    showSuccess("Tài khoản hợp lệ. Vui lòng nhập mật khẩu mới.");
+                    if (step2) step2.style.display = "block";
+                    showSuccess("Xác thực thành công! Vui lòng nhập mật khẩu mới.");
                 })
                 .catch((error) => {
+                    if (submitBtn) submitBtn.disabled = false;
                     showError("Lỗi kết nối hệ thống: " + error.message);
                 });
         });
@@ -80,33 +94,39 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             if (newPass.length < 6) {
-                showError("Mật khẩu phải từ 6 ký tự trở lên.");
+                showError("Mật khẩu phải từ 6 ký tự trở lên để đảm bảo an toàn.");
                 return;
             }
 
             if (newPass !== confirm) {
-                showError("Mật khẩu nhập lại không khớp.");
+                showError("Mật khẩu nhập lại không trùng khớp.");
                 return;
             }
 
             if (!foundUserFirebaseKey) {
-                showError("Đã xảy ra lỗi hệ thống. Vui lòng tải lại trang.");
+                showError("Đã xảy ra lỗi hệ thống (Thiếu mã định danh). Vui lòng tải lại trang.");
                 return;
             }
+
+            const submitBtnStep2 = step2.querySelector("button[type='submit']");
+            if (submitBtnStep2) submitBtnStep2.disabled = true;
+
+            showSuccess("Đang tiến hành cập nhật mật khẩu...");
 
             // Cập nhật trường password của User này trên Firebase
             window.database.ref("users/" + foundUserFirebaseKey).update({
                 password: newPass
             })
             .then(() => {
-                showSuccess("Đổi mật khẩu thành công! Đang chuyển về trang đăng nhập...");
+                showSuccess("Đổi mật khẩu thành công! Đang chuyển hướng về trang đăng nhập...");
                 
                 setTimeout(function () {
                     window.location.href = "dangnhap.html";
-                }, 1500);
+                }, 2000);
             })
             .catch((error) => {
-                showError("Có lỗi xảy ra: " + error.message);
+                if (submitBtnStep2) submitBtnStep2.disabled = false;
+                showError("Lỗi không thể lưu mật khẩu mới: " + error.message);
             });
         });
     }
