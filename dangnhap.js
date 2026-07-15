@@ -1,25 +1,22 @@
-// TỰ ĐỘNG CHUYỂN HƯỚNG NẾU ĐÃ ĐĂNG NHẬP RỒI
+// 1. Kiểm tra đăng nhập ngay lập tức để chuyển hướng (Tối ưu UX, tránh bị chớp màn hình)
+const isLogin = localStorage.getItem("isLogin");
+const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+
 if (isLogin === "true" && currentUser) {
-    // Nếu là admin, đẩy về trang admin
     if (localStorage.getItem("role") === "admin") {
         window.location.href = "Admin.html";
     } else {
-        // Nếu là user thường, đẩy về trang chủ
         window.location.href = "index.html"; 
     }
-    return; // Dừng thực thi các đoạn code phía dưới form
 }
-document.addEventListener("DOMContentLoaded", function () {
 
+document.addEventListener("DOMContentLoaded", function () {
     const loginForm = document.getElementById("loginForm");
     const loginBtn = document.getElementById("loginBtn");
     const userBox = document.getElementById("userBox");
     const loginMessage = document.getElementById("loginMessage");
 
     // ================= 1. HIỂN THỊ TRẠNG THÁI ĐĂNG NHẬP Ở HEADER =================
-    const isLogin = localStorage.getItem("isLogin");
-    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-
     if (userBox) {
         if (isLogin === "true" && currentUser) {
             userBox.innerHTML = `
@@ -45,9 +42,9 @@ document.addEventListener("DOMContentLoaded", function () {
             `;
         }
     }
+
     // ================= 2. XỬ LÝ ĐĂNG NHẬP (FIREBASE) =================
     function thucHienDangNhap() {
-        // KIỂM TRA ĐỀ PHÒNG FIREBASE CHƯA TẢI XONG
         if (!window.database) {
             showLoginError("Hệ thống đang khởi động, vui lòng thử lại sau 2 giây!");
             return;
@@ -59,16 +56,18 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!accountInput || !passwordInput) return;
 
         const account = accountInput.value.trim().toLowerCase(); 
-        const password = passwordInput.value.trim(); // Thêm .trim() để loại bỏ dấu cách thừa
+        const password = passwordInput.value.trim(); 
 
         if (account === "" || password === "") {
             showLoginError("Vui lòng điền đầy đủ tài khoản và mật khẩu.");
             return;
         }
 
-        if (loginMessage) loginMessage.innerHTML = "<span style='color: #ff9800;'>Đang xác thực thông tin...</span>"; 
+        if (loginMessage) {
+            loginMessage.innerHTML = "<span style='color: #ff9800;'>Đang xác thực thông tin...</span>"; 
+        }
 
-        // Vô hiệu hóa nút bấm tạm thời tránh việc người dùng click liên tục
+        // Vô hiệu hóa nút bấm tạm thời tránh spam click
         const activeBtn = loginForm ? loginForm.querySelector("button[type='submit']") : loginBtn;
         if (activeBtn) activeBtn.disabled = true;
 
@@ -91,13 +90,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (activeBtn) activeBtn.disabled = false;
                 const usersData = snapshot.val() || {};
                 
-                // Tìm kiếm thông tin khớp tài khoản
+                // Tìm kiếm thông tin khớp tài khoản (Email hoặc SĐT)
                 const foundUserKey = Object.keys(usersData).find(key => {
                     const user = usersData[key];
                     
                     const userEmail = user.email ? user.email.toLowerCase().trim() : "";
                     const userPhone = user.phone ? user.phone.toLowerCase().trim() : "";
-                    const userPassword = user.password ? user.password.trim() : ""; // Cắt khoảng trắng đầu đuôi của DB
+                    const userPassword = user.password ? user.password.trim() : ""; 
                     
                     const isAccountMatch = (userEmail === account || userPhone === account);
                     const isPasswordMatch = (userPassword === password);
@@ -112,7 +111,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     localStorage.setItem("currentUser", JSON.stringify(loggedInUser));
                     localStorage.setItem("role", "user");
 
-                    if (loginMessage) loginMessage.innerHTML = "<span style='color: green;'>Đăng nhập thành công! Đang chuyển hướng...</span>";
+                    if (loginMessage) {
+                        loginMessage.innerHTML = "<span style='color: green;'>Đăng nhập thành công! Đang chuyển hướng...</span>";
+                    }
 
                     setTimeout(() => {
                         window.location.href = "index.html";

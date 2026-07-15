@@ -1,34 +1,34 @@
 let editingFirebaseKey = null;
 let currentProductId = null;
-let isSaving = false; // Biến cờ (flag) chặn đứng việc submit đúp 
+let isSaving = false; // Bi?n c? (flag) ch?n d?ng vi?c submit d�p 
 
-// Các biến cấu hình phân trang cho danh sách Xe của Admin
+// C�c bi?n c?u h�nh ph�n trang cho danh s�ch Xe c?a Admin
 let currentPage = 1;
 const cardsPerPage = 12;
 let pageGroup = 0;
 const maxPageShow = 3;
 
-// ================= KHỞI TẠO TRANG ADMIN =================
+// ================= KH?I T?O TRANG ADMIN =================
 document.addEventListener("DOMContentLoaded", function () {
     showTab("sanpham");
     loadUsers();
     loadOrders();
     loadCars();  
 
-    // Gán sự kiện submit cho form thêm/sửa sản phẩm
+    // G�n s? ki?n submit cho form th�m/s?a s?n ph?m
     const productForm = document.getElementById("product-form");
     if (productForm) {
         productForm.removeEventListener("submit", saveProduct);
         productForm.addEventListener("submit", saveProduct);
     }
 
-    // Gán sự kiện submit cho form đặt đơn hàng
+    // G�n s? ki?n submit cho form d?t don h�ng
     const orderForm = document.getElementById("order-form");
     if (orderForm) {
         orderForm.addEventListener("submit", saveOrderSubmit);
     }
 
-    // Gán sự kiện tìm kiếm xe trong tab Quản Lý Xe
+    // G�n s? ki?n t�m ki?m xe trong tab Qu?n L� Xe
     const searchInput = document.getElementById("timkiemxe");
     const searchBtn = document.getElementById("nuttimkiemxe");
 
@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 
-// ================= 1. CHUYỂN ĐỔI TAB QUẢN LÝ =================
+// ================= 1. CHUY?N �?I TAB QU?N L� =================
 function showTab(name) {
     document.querySelectorAll(".noidung").forEach(t => t.classList.remove("active"));
 
@@ -55,14 +55,14 @@ function showTab(name) {
     
     const title = document.getElementById("page-title");
     if (title) {
-        if (name === "sanpham") title.innerText = "Quản Lý Sản Phẩm";
-        if (name === "nguoidung") title.innerText = "Quản Lý Khách Hàng";
-        if (name === "donhang") title.innerText = "Quản Lý Đơn Hàng";
-        if (name === "xe") title.innerText = "Quản Lý Xe";
+        if (name === "sanpham") title.innerText = "Qu?n L� S?n Ph?m";
+        if (name === "nguoidung") title.innerText = "Qu?n L� Kh�ch H�ng";
+        if (name === "donhang") title.innerText = "Qu?n L� �on H�ng";
+        if (name === "xe") title.innerText = "Qu?n L� Xe";
     }
 }
 
-// ================= 2. QUẢN LÝ ĐƠN HÀNG =================
+// ================= 2. QU?N L� �ON H�NG =================
 function openOrderForm() {
     const box = document.getElementById("order-form-box");
     if (!box) return;
@@ -83,7 +83,7 @@ function saveOrderSubmit(e) {
         address: document.getElementById("customer-address").value,
         product: document.getElementById("product-name").value,
         total: document.getElementById("total-price").value,
-        status: "Chờ xác nhận"
+        status: "Ch? x�c nh?n"
     };
 
     orders.push(order);
@@ -95,27 +95,27 @@ function saveOrderSubmit(e) {
     document.getElementById("order-form-box").style.display = "none";
 
     loadOrders();
-    alert("Đã lưu đơn thành công!");
+    alert("�� luu don th�nh c�ng!");
 }
 
 function acceptOrder(index) {
     let orders = JSON.parse(localStorage.getItem("orders")) || [];
     if (!orders[index]) return;
 
-    orders[index].status = "Đã xác nhận";
+    orders[index].status = "�� x�c nh?n";
     localStorage.setItem("orders", JSON.stringify(orders));
     loadOrders();
-    alert("Đã xác nhận đơn hàng thành công!");
+    alert("�� x�c nh?n don h�ng th�nh c�ng!");
 }
 
 function deleteOrder(index) {
     let orders = JSON.parse(localStorage.getItem("orders")) || [];
-    if (!confirm("Bạn có chắc chắn muốn xóa đơn hàng này?")) return;
+    if (!confirm("B?n c� ch?c ch?n mu?n x�a don h�ng n�y?")) return;
 
     orders.splice(index, 1);
     localStorage.setItem("orders", JSON.stringify(orders));
     loadOrders();
-    alert("Đã xóa đơn hàng thành công!");
+    alert("�� x�a don h�ng th�nh c�ng!");
 }
 
 function loadOrders() {
@@ -133,22 +133,22 @@ function loadOrders() {
             <td>${o.phone}</td>
             <td>${o.address}</td>
             <td>${o.product}</td>
-            <td>${Number(o.total).toLocaleString()} VNĐ</td>
+            <td>${Number(o.total).toLocaleString()} VN�</td>
             <td>${o.status}</td>
             <td>
-                <button class="btn-accept" onclick="acceptOrder(${i})">Xác Nhận</button>
-                <button class="btn-delete" onclick="deleteOrder(${i})">Xoá</button>
+                <button class="btn-accept" onclick="acceptOrder(${i})">X�c Nh?n</button>
+                <button class="btn-delete" onclick="deleteOrder(${i})">Xo�</button>
             </td>
         </tr>`;
     });
 }
 
-// ================= 3. QUẢN LÝ NGƯỜI DÙNG =================
+// ================= 3. QU?N L� NGU?I D�NG =================
 function loadUsers() {
     const tbody = document.getElementById("user-table-body");
     if (!tbody) return;
 
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; font-style:italic;">Đang kết nối tới máy chủ Firebase...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; font-style:italic;">�ang k?t n?i t?i m�y ch? Firebase...</td></tr>`;
 
     if (!window.database) {
         setTimeout(loadUsers, 1000);
@@ -162,10 +162,10 @@ function loadUsers() {
         tbody.innerHTML = "";
         const usersData = snapshot.val();
 
-        console.log("Dữ liệu Users nhận được từ Firebase:", usersData);
+        console.log("D? li?u Users nh?n du?c t? Firebase:", usersData);
 
         if (!usersData) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: #ff9800;"> chưa có ai đăng ký.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: #ff9800;"> Chua c� ai dang k�.</td></tr>`;
             return;
         }
 
@@ -180,35 +180,34 @@ function loadUsers() {
                 <td>${u.phone || "N/A"}</td>
                 <td>${u.password || "N/A"}</td>
                 <td>
-                    <button class="btn-delete" onclick="deleteFirebaseUser('${key}')">Xóa</button>
+                    <button class="btn-delete" onclick="deleteFirebaseUser('${key}')">X�a</button>
                 </td>
             </tr>`;
         });
     }, (error) => {
-        console.error("Lỗi Firebase:", error);
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red; font-weight:bold;">Lỗi bảo mật Rules hoặc cấu hình: ${error.message}</td></tr>`;
+        console.error("L?i Firebase:", error);
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red; font-weight:bold;">L?i b?o m?t Rules ho?c c?u h�nh: ${error.message}</td></tr>`;
     });
 }
-
-// ✨ BỔ SUNG HÀM XÓA USER TRÊN MÁY CHỦ FIREBASE TOÀN CỤC
+// B? SUNG H�M X�A USER TR�N M�Y CH? FIREBASE TO�N C?C
 window.deleteFirebaseUser = function(key) {
-    if (!confirm("Bạn có chắc chắn muốn xóa tài khoản người dùng này không?")) return;
+    if (!confirm("B?n c� ch?c ch?n mu?n x�a t�i kho?n ngu?i d�ng n�y kh�ng?")) return;
 
     if (!window.database) {
-        alert("Hệ thống chưa kết nối xong với Firebase!");
+        alert("H? th?ng chua k?t n?i xong v?i Firebase!");
         return;
     }
 
     window.database.ref("users/" + key).remove()
         .then(() => {
-            alert("Đã xóa tài khoản người dùng thành công!");
+            alert("�� x�a t�i kho?n ngu?i d�ng th�nh c�ng!");
         })
         .catch((error) => {
-            alert("Không thể xóa user: " + error.message);
+            alert("Kh�ng th? x�a user: " + error.message);
         });
 };
 
-// ================= 4. QUẢN LÝ SẢN PHẨM / XE (Firebase Realtime) =================
+// ================= 4. QU?N L� S?N PH?M / XE (Firebase Realtime) =================
 function saveProduct(e) {
     e.preventDefault();
     e.stopImmediatePropagation();
@@ -225,7 +224,7 @@ function saveProduct(e) {
         year: document.getElementById("p-year").value,
         engine: document.getElementById("p-engine").value,
         power: document.getElementById("p-power").value,
-        gearbox: document.getElementById("p-gearbox").value,
+        box: document.getElementById("p-gearbox").value, // Luu � ID input trong HTML
         drive: document.getElementById("p-drive").value,
         acceleration: document.getElementById("p-acceleration").value,
         topspeed: document.getElementById("p-topspeed").value,
@@ -235,7 +234,7 @@ function saveProduct(e) {
     if (editingFirebaseKey !== null && !file) {
         window.database.ref("products/" + editingFirebaseKey).update(carData)
         .then(() => {
-            alert("Đã cập nhật xe thành công!");
+            alert("�� c?p nh?t xe th�nh c�ng!");
             isSaving = false;
             resetProductForm();
         }).catch(() => { isSaving = false; });
@@ -243,7 +242,7 @@ function saveProduct(e) {
     }
 
     if (!file) {
-        alert("Vui lòng chọn hình ảnh cho xe!");
+        alert("Vui l�ng ch?n h�nh ?nh cho xe!");
         isSaving = false;
         return;
     }
@@ -255,13 +254,13 @@ function saveProduct(e) {
         if (editingFirebaseKey === null) {
             const newCarRef = window.database.ref("products").push();
             newCarRef.set(carData).then(() => {
-                alert("Thêm xe mới thành công!");
+                alert("Th�m xe m?i th�nh c�ng!");
                 isSaving = false;
                 resetProductForm();
             }).catch(() => { isSaving = false; });
         } else {
             window.database.ref("products/" + editingFirebaseKey).set(carData).then(() => {
-                alert("Cập nhật thông tin và ảnh thành công!");
+                alert("C?p nh?t th�ng tin v� ?nh th�nh c�ng!");
                 isSaving = false;
                 resetProductForm();
             }).catch(() => { isSaving = false; });
@@ -275,8 +274,8 @@ function resetProductForm() {
     const form = document.getElementById("product-form");
     if (form) form.reset();
     
-    document.getElementById("form-title").innerText = "Thêm Sản Phẩm Mới";
-    document.getElementById("btn-submit-form").innerText = "Thêm Sản Phẩm";
+    document.getElementById("form-title").innerText = "Th�m S?n Ph?m M?i";
+    document.getElementById("btn-submit-form").innerText = "Th�m S?n Ph?m";
     document.getElementById("p-img").required = true;
     showTab("xe");
 }
@@ -289,11 +288,11 @@ function loadCars() {
     productsRef.off();
 
     productsRef.on("value", (snapshot) => {
-        container.innerHTML = ""; // 👍 FIX LỖI: Reset danh sách cũ để chống lặp thẻ xe khi update
+        container.innerHTML = ""; // FIX L?I: Reset danh s�ch cu d? ch?ng l?p th? xe khi update
         const productsData = snapshot.val();
         
         if (!productsData) {
-            container.innerHTML = "<p style='text-align:center;'>Chưa có xe nào trong hệ thống.</p>";
+            container.innerHTML = "<p style='text-align:center;'>Chua c� xe n�o trong h? th?ng.</p>";
             const chuyentrang = document.getElementById("chuyentrang");
             if (chuyentrang) chuyentrang.innerHTML = "";
             return;
@@ -307,18 +306,18 @@ function loadCars() {
                 <div class="anhxe">
                     <img src="${car.image}" alt="${car.name}">
                     <div class="giatien">
-                        ${Number(car.price).toLocaleString()} VNĐ
+                        ${Number(car.price).toLocaleString()} VN�
                     </div>
                 </div>
                 <div class="banduoi">
                     <h3>${car.name}</h3>
                     <p>
                         <strong>0-100:</strong> ${car.acceleration || "--"}&nbsp; | &nbsp;
-                        <strong>Tối đa:</strong> ${car.topspeed || "--"}
+                        <strong>T?i da:</strong> ${car.topspeed || "--"}
                     </p>
                     <div class="admin-action">
-                        <button onclick="editCar('${key}')">Sửa</button>
-                        <button onclick="deleteCar('${key}')">Xóa</button>
+                        <button onclick="editCar('${key}')">S?a</button>
+                        <button onclick="deleteCar('${key}')">X�a</button>
                     </div>
                 </div>
             </div>`;
@@ -328,10 +327,10 @@ function loadCars() {
     });
 }
 
-// Đăng ký toàn cục các hàm gọi từ thuộc tính HTML inline (onclick) để tránh lỗi scope trên môi trường module/online
+// �ang k� to�n c?c c�c h�m g?i t? thu?c t�nh HTML inline (onclick) d? tr�nh l?i scope tr�n m�i tru?ng module/online
 window.deleteCar = function(key) {
-    if (!confirm("Bạn có chắc muốn xóa xe này khỏi hệ thống?")) return;
-    window.database.ref("products/" + key).remove().then(() => { alert("Đã xóa xe khỏi hệ thống!"); });
+    if (!confirm("B?n c� ch?c mu?n x�a xe n�y kh?i h? th?ng?")) return;
+    window.database.ref("products/" + key).remove().then(() => { alert("�� x�a xe kh?i h? th?ng!"); });
 };
 
 window.editCar = function(key) {
@@ -354,13 +353,13 @@ window.editCar = function(key) {
         document.getElementById("p-topspeed").value = car.topspeed || "";
         document.getElementById("p-description").value = car.description || "";
 
-        document.getElementById("form-title").innerText = "Sửa Thông Tin Xe";
-        document.getElementById("btn-submit-form").innerText = "Cập Nhật Xe";
+        document.getElementById("form-title").innerText = "S?a Th�ng Tin Xe";
+        document.getElementById("btn-submit-form").innerText = "C?p Nh?t Xe";
         document.getElementById("p-img").required = false;
     });
 };
 
-// ================= 5. LOGIC TÌM KIẾM XE =================
+// ================= 5. LOGIC T�M KI?M XE =================
 function timKiemXe() {
     const searchInput = document.getElementById("timkiemxe");
     const keyword = searchInput ? searchInput.value.toLowerCase().trim() : "";
@@ -384,7 +383,7 @@ function timKiemXe() {
     taoPagination();
 }
 
-// ================= 6. LOGIC HIỂN THỊ TRANG =================
+// ================= 6. LOGIC HI?N TH? TRANG =================
 function hienThiTrang(page) {
     const cards = [...document.querySelectorAll("#admin-car-list .the")]
         .filter(card => card.dataset.show === "true");
@@ -403,7 +402,7 @@ function hienThiTrang(page) {
     }
 }
 
-// ================= 7. LOGIC TẠO THANH PHÂN TRANG (PAGINATION) =================
+// ================= 7. LOGIC T?O THANH PH�N TRANG (PAGINATION) =================
 function taoPagination() {
     const cards = [...document.querySelectorAll("#admin-car-list .the")]
         .filter(card => card.dataset.show === "true");
