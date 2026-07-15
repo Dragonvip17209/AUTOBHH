@@ -1,0 +1,66 @@
+<!doctype html>	
+<html>
+<head>
+<meta charset="utf-8">
+<title>Untitled Document</title>
+	<link href="styles/dangky.css" type="text/css" rel="stylesheet">
+	<script src="scripts/dangky.js"></script>
+</head>
+	<div class="menu1">
+            <a href="index.html" class="logo">Auto<span>BHH</span></a>
+                <ul class="menu">
+                    <li><a href="index.html">Trang chủ</a></li>
+                    <li class="hangxe">
+					<a href="Sanpham.html">Sản phẩm</a>
+					</li>
+                    <li><a href="#contact">Liên hệ</a></li>
+                </ul>
+        </div>
+	<main class="main">
+	<div class="dangnhap">
+	<div class="phanchinh">
+    <h2>Đăng ký</h2>
+    <p>Tạo tài khoản để mua sắm và theo dõi đơn hàng</p>
+
+    <form id="registerForm">
+      <div class="dong">
+        <div class="bangnhap">
+          <label>Họ và tên</label>
+          <input id="fullName" type="text" placeholder="Ví dụ: Nguyen Van A" required />
+        </div>
+        <div class="bangnhap">
+          <label>Số điện thoại</label>
+          <input id="phone" type="tel" placeholder="Ví dụ: 09xxxxxxxx" required />
+        </div>
+      </div>
+
+      <div class="Email">
+        <label>Email</label>
+        <input id="email" type="email" placeholder="Ví dụ: abc@gmail.com" required />
+      </div>
+
+      <div class="dong">
+        <div class="bangnhap">
+          <label>Mật khẩu</label>
+          <input id="password" type="password" placeholder="Tối thiểu 6 ký tự" required />
+        </div>
+        <div class="bangnhap">
+          <label>Nhập lại mật khẩu</label>
+          <input id="confirm" type="password" placeholder="Nhập lại mật khẩu" required />
+        </div>
+      </div>
+
+      <button class="nutbam" type="submit">Tạo tài khoản</button>
+
+      <div id="errorBox" class="error"></div>
+      <div id="successBox" class="success"></div>
+
+      <div class="note"> Đã có tài khoản? <a href="dangnhap.html">Đăng nhập</a>
+      </div>
+    </form>
+  </div>
+</div>
+	</main>
+<body>
+</body>
+</html>

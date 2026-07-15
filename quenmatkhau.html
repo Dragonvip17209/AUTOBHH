@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Untitled Document</title>
+	<link href="styles/quenmatkhau.css" type="text/css" rel="stylesheet">
+	<script src="scripts/doimatkhau.js" ></script>
+</head>
+	<div class="bang">
+        <div class="menu1">
+            <a href="index.html" class="logo">Auto<span>BHH</span></a>
+                 <ul class="menu">
+                    <li><a href="index.html">Trang chủ</a></li>
+					<a href="Sanpham.html">Sản phẩm</a>
+                    <li><a href="lienhe.html">Liên hệ</a></li>
+					 <li><a href="dangnhap.html">Đăng Nhập</a></li>
+                </ul>
+        </div>
+	</div>
+	<main class="bang">
+  <div class="phanchinh">
+    <h2>Quên mật khẩu</h2>
+    <p>Nhập email hoặc số điện thoại đã đăng ký để đặt lại mật khẩu</p>
+    <form id="step1">
+      <div class="bangnhap">
+        <label>Email hoặc Số điện thoại</label>
+        <input id="identify" type="text" placeholder="abc@gmail.com hoặc 09xxxxxxx" required />
+      </div>
+      <button class="nutbam" type="submit">Đổi Mật Khẩu</button>
+    </form>
+    <form id="step2" style="display:none;">
+      <div class="bangnhap">
+        <label>Mật khẩu mới</label>
+        <input id="newPass" type="password" placeholder="Tối thiểu 6 ký tự" />
+      </div>
+      <div class="bangnhap">
+        <label>Nhập lại mật khẩu</label>
+        <input id="confirmPass" type="password" placeholder="Nhập lại mật khẩu" />
+      </div>
+		<button class="nutbam" type="submit">Đổi mật khẩu</button>
+    </form>
+    <div id="errorBox" class="error"></div>
+    <div id="successBox" class="success"></div>
+  </div>
+</main>
+<body>
+</body>
+</html>

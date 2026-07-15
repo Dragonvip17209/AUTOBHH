@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+
+<head>
+<meta charset="utf-8">
+<title>Liên hệ</title>
+
+<link href="styles/lienhen.css" type="text/css" rel="stylesheet">
+<script src="scripts/lienhe.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+
+<body>
+<div class="bang">
+
+    <div class="menu1">
+        <a href="index.html" class="logo">Auto<span>BHH</span></a>
+
+        <ul class="menu">
+            <li><a href="index.html">Trang chủ</a></li>
+            <li><a href="Sanpham.html">Sản phẩm</a></li>
+            <li id="userBox">
+    		<a class="nut" href="dangnhap.html" id="userName">Đăng Nhập</a>
+			</li>
+        </ul>
+    </div>
+
+    <main class="container">
+
+        <section class="card">
+
+            <h2 class="title">📩 Gửi tin nhắn cho shop</h2>
+
+            <p class="desc">
+                điền thông tin bên dưới. Shop sẽ phản hồi sớm nhất qua số điện thoại hoặc email của bạn
+            </p>
+
+            <form id="contactForm">
+
+                <div class="bangnhap">
+                    <label>Họ và tên</label>
+                    <input id="fullName" type="text" placeholder="Ví dụ: Nguyễn Thị A" required>
+                </div>
+
+                <div class="bangnhap">
+                    <label>Số điện thoại</label>
+                    <input id="phone" type="tel" placeholder="Ví dụ: 09xxxxxxxx" required>
+                </div>
+
+                <div class="bangnhap">
+                    <label>Email (không bắt buộc)</label>
+                    <input id="email" type="email" placeholder="Ví dụ: abc@gmail.com">
+                </div>
+
+                <div class="bangnhap">
+                    <label>Nội dung</label>
+                    <textarea id="message" placeholder="bạn muốn shop tư vấn sản phẩm nào?" required></textarea>
+                </div>
+
+                <div class="nut">
+                    <button class="nutxoa" type="reset">Xóa nội dung</button>
+
+                    <button class="nutbam" type="submit">
+                        Gửi liên hệ
+                    </button>
+                </div>
+
+            </form>
+
+        </section>
+
+    </main>
+
+</div>
+</body>
+</html>

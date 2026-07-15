@@ -1,0 +1,242 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Untitled Document</title>
+	<link href="styles/Admin.css" type="text/css" rel="stylesheet">
+	<script src="scripts/Admin.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+	<script>
+  	// 2. Cấu hình Firebase của bạn
+  	const firebaseConfig = {
+    apiKey: "AIzaSyBRbZ5BBUd3BjzxTtrnkQ6ExUzgKG7fsGE",
+    authDomain: "autobhh-11526.firebaseapp.com",
+    databaseURL: "https://autobhh-11526-default-rtdb.firebaseio.com",
+    projectId: "autobhh-11526",
+    storageBucket: "autobhh-11526.firebasestorage.app",
+    messagingSenderId: "454576332436",
+    appId: "1:454576332436:web:f0ac2f894b33ca8b43de81",
+    measurementId: "G-VSDVJFKLY6"
+  	};
+	// 3. Khởi tạo ứng dụng
+  	firebase.initializeApp(firebaseConfig);
+  // 4. Tạo biến kết nối toàn cục (global) để file Admin.js có thể dùng chung
+  window.database = firebase.database();
+</script>
+</head>
+	<div class="menu1">
+				<a href="index.html" class="logo">Auto<span>BHH</span></a>
+					<ul class="menu">
+						<li><a href="#" onclick="showTab('sanpham')">Thêm Sản Phẩm</a></li>
+						<li><a href="#" onclick="showTab('nguoidung')">Quản Lý Khách Hàng</a></li>
+						<li><a href="#" onclick="showTab('donhang')">Quản Lý Đơn Hàng</a></li>
+						<li><a href="#" onclick="showTab('xe')">Quản Lý Xe</a></li>
+					</ul>
+			</div>
+	<div class="trangchu">
+        <div id="tab-sanpham" class="noidung">
+            <div class="khung3">
+                <h3 id="form-title">Thêm Sản Phẩm Mới</h3>
+                <form id="product-form" onsubmit="saveProduct(event)">
+                    <input type="hidden" id="product-id"> 
+                    <div class="bieumau">
+                        <div class="thongtin">
+                            <label>Tên sản phẩm</label>
+                            <input type="text" id="p-name" required placeholder="Ví dụ: Porscher">
+                        </div>
+                        <div class="thongtin">
+                            <label>Giá bán (VNĐ)</label>
+                            <input type="number" id="p-price" required placeholder="Ví dụ: 350000">
+                        </div>
+                        <div class="thongtin">
+                            <label>Danh mục sản phẩm</label>
+                            <select id="p-category" required>
+                                <option value="porsche">PORSCHE</option>
+								<option value="toyota">TOYOTA</option>
+								<option value="ford">FORD</option>
+								<option value="chevrolet">CHEVROLET</option>
+								<option value="lamborghini">LAMBORGHINI</option>
+								<option value="ferrari">FERRARI</option>
+								<option value="bugatti">BUGATTI</option>
+                            </select>
+                        </div>
+                        <div class="thongtin">
+                            <label>Chọn ảnh sản phẩm</label><input type="file" id="p-img" accept="image/*" required>
+                        </div>
+						<div class="thongtin">
+    <label>Năm sản xuất</label>
+    <input type="number" id="p-year" placeholder="Ví dụ: 2024">
+</div>
+
+<div class="thongtin">
+    <label>Động cơ</label>
+    <input type="text" id="p-engine" placeholder="Ví dụ: V12 6.5L Hybrid">
+</div>
+
+<div class="thongtin">
+    <label>Công suất</label>
+    <input type="text" id="p-power" placeholder="Ví dụ: 1001 mã lực">
+</div>
+
+<div class="thongtin">
+    <label>Hộp số</label>
+    <input type="text" id="p-gearbox" placeholder="Ví dụ: 8 cấp tự động">
+</div>
+
+<div class="thongtin">
+    <label>Dẫn động</label>
+    <input type="text" id="p-drive" placeholder="Ví dụ: AWD">
+</div>
+
+<div class="thongtin">
+    <label>0 - 100 km/h</label>
+    <input type="text" id="p-acceleration" placeholder="Ví dụ: 2.5 giây">
+</div>
+
+<div class="thongtin">
+    <label>Tốc độ tối đa</label>
+    <input type="text" id="p-topspeed" placeholder="Ví dụ: 350 km/h">
+</div>
+
+<div class="thongtin" style="grid-column:1/3;">
+    <label>Mô tả chi tiết</label>
+    <textarea id="p-description" rows="5"
+        placeholder="Nhập mô tả xe..."></textarea>
+</div>
+                    </div>
+                    <button type="submit" class="nutbam" id="btn-submit-form">Thêm Sản Phẩm</button>
+                </form>
+            </div>
+            <div class="sanpham" id="product-grid-container"></div>
+        </div>
+
+        <div id="tab-donhang" class="noidung">
+
+    <!-- NÚT MỞ FORM -->
+    <button class="nutbam" onclick="openOrderForm()">
+        + Tạo đơn hàng
+    </button>
+
+    <!-- FORM -->
+    <div id="order-form-box" class="menu2" style="display:none; margin-top:20px;">
+
+        <form id="order-form" class="bieumau">
+
+    <div class="thongtin">
+        <label>Mã đơn</label>
+        <input type="text" id="order-id" readonly>
+    </div>
+
+    <div class="thongtin">
+        <label>Khách hàng</label>
+        <input type="text" id="customer-name" required>
+    </div>
+
+    <div class="thongtin">
+        <label>Số điện thoại</label>
+        <input type="text" id="customer-phone" required>
+    </div>
+
+    <div class="thongtin">
+        <label>Địa chỉ</label>
+        <input type="text" id="customer-address" required>
+    </div>
+
+    <div class="thongtin">
+        <label>Sản phẩm</label>
+        <input type="text" id="product-name" required>
+    </div>
+
+    <div class="thongtin">
+        <label>Tổng tiền</label>
+        <input type="number" id="total-price" required>
+    </div>
+
+    <!-- ✅ THIẾU CÁI NÀY -->
+    <button type="submit" class="nutbam">
+        Lưu đơn
+    </button>
+        </form>
+    </div>
+
+    <!-- BẢNG -->
+    <div class="menu2">
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã Đơn</th>
+                    <th>Khách Hàng</th>
+                    <th>SĐT</th>
+                    <th>Địa Chỉ</th>
+                    <th>Sản Phẩm</th>
+                    <th>Tổng Tiền</th>
+                    <th>Trạng Thái</th>
+                    <th>Hành Động</th>
+                </tr>
+            </thead>
+
+            <tbody id="order-table-body"></tbody>
+        </table>
+    </div>
+
+</div>
+
+        <div id="tab-nguoidung" class="noidung">
+            <div class="nguoidung">
+                <label class="boloc">
+                    <input type="radio" name="user-filter" value="registered" checked> Đã đăng ký
+                </label>
+            </div>
+
+            <div class="bieumau" id="user-edit-container" style="display: none; margin-top: 20px;">
+                    <input type="hidden" id="edit-user-id">
+                    <div class="bieumau">
+                        <div class="thongtin">
+                            <label>Tên tài khoản / Họ tên</label>
+                            <input type="text" id="edit-user-name" required>
+                        </div>
+                        <div class="thongtin">
+                            <label>Email đăng ký</label>
+
+                            <input type="email" id="edit-user-email">
+                        </div>
+                        <div class="thongtin">
+                            <label>Số điện thoại</label>
+                            <input type="text" id="edit-user-phone">
+                        </div>
+                    </div>
+            </div>
+
+            <div class="menu2">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>UID / ID</th>
+                            <th>Tên Tài Khoản</th>
+                            <th>Email Đăng Ký</th>
+                            <th>Số Điện Thoại</th>
+                            <th>Mật Khẩu</th>
+                            <th>Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+		<div id="tab-xe" class="noidung">
+
+    <h3>Quản Lý Xe</h3>
+	<div class="timkiem">
+	<input type="text" id="timkiemxe" placeholder="Tìm kiếm xe...">
+	<button id="nuttimkiemxe">🔍</button>
+	</div>
+    <div id="admin-car-list" class="bangxe">
+
+    </div>
+	<div id="chuyentrang" class="chuyentrang"></div>
+</div>
+    </div>
+<body>
+</body>
+</html>
