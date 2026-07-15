@@ -142,23 +142,21 @@ function loadOrders() {
         </tr>`;
     });
 }
-
-// ================= 3. QUẢN LÝ NGƯỜI DÙNG =================
 // ================= 3. QUẢN LÝ NGƯỜI DÙNG (Firebase Realtime Database) =================
 
 function loadUsers() {
     const tbody = document.getElementById("user-table-body");
     if (!tbody) return;
 
-    // Hiển thị thông báo đang tải dữ liệu ban đầu
+    // Hiển thị thông báo đang tải dữ liệu
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; font-style:italic;">Đang tải danh sách thành viên...</td></tr>`;
 
     const usersRef = window.database.ref("users");
     
-    // Tắt các sự kiện lắng nghe cũ tránh bị lặp (giống cách làm ở loadCars)
+    // Tắt lắng nghe cũ để tránh trùng lặp sự kiện
     usersRef.off();
 
-    // Lắng nghe dữ liệu thời gian thực từ nhánh "users"
+    // Lắng nghe dữ liệu thời gian thực từ nhánh "users" trên Firebase
     usersRef.on("value", (snapshot) => {
         tbody.innerHTML = "";
         const usersData = snapshot.val();
@@ -169,7 +167,7 @@ function loadUsers() {
         }
 
         let index = 1;
-        // Duyệt qua từng bản ghi trong Object trả về từ Firebase
+        // Duyệt qua từng bản ghi trong Firebase
         Object.keys(usersData).forEach((key) => {
             const u = usersData[key];
             tbody.innerHTML += `
@@ -188,6 +186,8 @@ function loadUsers() {
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Lỗi tải dữ liệu: ${error.message}</td></tr>`;
     });
 }
+
+// Hàm xóa người dùng trực tiếp trên Firebase Realtime Database
 function deleteFirebaseUser(key) {
     if (!confirm("Bạn có chắc chắn muốn xóa thành viên này khỏi hệ thống?")) return;
 
@@ -199,15 +199,6 @@ function deleteFirebaseUser(key) {
             alert("Lỗi khi xóa tài khoản: " + error.message);
         });
 }
-function deleteUser(i) {
-    let users = JSON.parse(localStorage.getItem("users")) || [];
-    if (!confirm("Bạn có chắc chắn muốn xóa user này?")) return;
-
-    users.splice(i, 1);
-    localStorage.setItem("users", JSON.stringify(users));
-    loadUsers();
-}
-
 // ================= 4. QUẢN LÝ SẢN PHẨM / XE (Firebase Realtime) =================
 function saveProduct(e) {
     e.preventDefault();
