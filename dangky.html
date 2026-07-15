@@ -5,6 +5,22 @@
 <title>Untitled Document</title>
 	<link href="styles/dangky.css" type="text/css" rel="stylesheet">
 	<script src="scripts/dangky.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBRbZ5BBUd3BjzxTtrnkQ6ExUzgKG7fsGE",
+    authDomain: "autobhh-11526.firebaseapp.com",
+    databaseURL: "https://autobhh-11526-default-rtdb.firebaseio.com",
+    projectId: "autobhh-11526",
+    storageBucket: "autobhh-11526.firebasestorage.app",
+    messagingSenderId: "454576332436",
+    appId: "1:454576332436:web:f0ac2f894b33ca8b43de81",
+    measurementId: "G-VSDVJFKLY6"
+  };
+  firebase.initializeApp(firebaseConfig);
+  window.database = firebase.database();
+</script>
 </head>
 	<div class="menu1">
             <a href="index.html" class="logo">Auto<span>BHH</span></a>

@@ -1,19 +1,5 @@
-// JavaScript Document
-
-const KEY_USERS = "users";
-let foundUserIndex = -1;
-
-function getUsers() {
-    try {
-        return JSON.parse(localStorage.getItem(KEY_USERS)) || [];
-    } catch {
-        return [];
-    }
-}
-
-function saveUsers(users) {
-    localStorage.setItem(KEY_USERS, JSON.stringify(users));
-}
+// Biến lưu trữ Key Firebase của User tìm thấy thay vì dùng Index trong mảng
+let foundUserFirebaseKey = null;
 
 document.addEventListener("DOMContentLoaded", function () {
 
@@ -34,55 +20,51 @@ document.addEventListener("DOMContentLoaded", function () {
         errorBox.style.display = "none";
     }
 
-    // STEP 1
+    // ================= STEP 1: XÁC MINH TÀI KHOẢN =================
     step1.addEventListener("submit", function (e) {
-
         e.preventDefault();
 
-        const value = document
-            .getElementById("identify")
-            .value
-            .trim()
-            .toLowerCase();
+        const value = document.getElementById("identify").value.trim().toLowerCase();
 
         if (value === "") {
             showError("Vui lòng nhập Email hoặc Số điện thoại.");
             return;
         }
 
-        const users = getUsers();
+        // Đọc dữ liệu từ Firebase Realtime Database
+        window.database.ref("users").once("value")
+            .then((snapshot) => {
+                const usersData = snapshot.val() || {};
 
-        foundUserIndex = users.findIndex(function (u) {
+                // Tìm Key của user có email hoặc số điện thoại trùng khớp
+                foundUserFirebaseKey = Object.keys(usersData).find(key => {
+                    const u = usersData[key];
+                    const emailMatch = u.email && u.email.toLowerCase() === value;
+                    const phoneMatch = u.phone && u.phone.toLowerCase() === value;
+                    return emailMatch || phoneMatch;
+                });
 
-            return (
-                (u.email && u.email.toLowerCase() === value) ||
-                (u.phone && u.phone.toLowerCase() === value)
-            );
+                if (!foundUserFirebaseKey) {
+                    showError("Không tìm thấy tài khoản với thông tin này.");
+                    return;
+                }
 
-        });
-
-        if (foundUserIndex === -1) {
-            showError("Không tìm thấy tài khoản với thông tin này.");
-            return;
-        }
-
-        step1.style.display = "none";
-        step2.style.display = "block";
-
-        showSuccess("Tài khoản hợp lệ. Vui lòng nhập mật khẩu mới.");
-
+                // Tài khoản hợp lệ -> Chuyển sang Bước 2
+                step1.style.display = "none";
+                step2.style.display = "block";
+                showSuccess("Tài khoản hợp lệ. Vui lòng nhập mật khẩu mới.");
+            })
+            .catch((error) => {
+                showError("Lỗi kết nối hệ thống: " + error.message);
+            });
     });
 
-    // STEP 2
+    // ================= STEP 2: CẬP NHẬT MẬT KHẨU MỚI =================
     step2.addEventListener("submit", function (e) {
-
         e.preventDefault();
 
-        const newPass =
-            document.getElementById("newPass").value.trim();
-
-        const confirm =
-            document.getElementById("confirmPass").value.trim();
+        const newPass = document.getElementById("newPass").value.trim();
+        const confirm = document.getElementById("confirmPass").value.trim();
 
         if (newPass === "") {
             showError("Vui lòng nhập mật khẩu mới.");
@@ -104,20 +86,21 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        const users = getUsers();
+        if (!foundUserFirebaseKey) {
+            showError("Đã xảy ra lỗi hệ thống. Vui lòng tải lại trang.");
+            return;
+        }
 
-        users[foundUserIndex].password = newPass;
-
-        saveUsers(users);
-
-        showSuccess(
-            "Đổi mật khẩu thành công! Đang chuyển về trang đăng nhập..."
-        );
-
-        setTimeout(function () {
-            window.location.href = "dangnhap.html";
-        }, 1500);
-
-    });
-
-});
+        // Cập nhật trường password của User này trên Firebase
+        window.database.ref("users/" + foundUserFirebaseKey).update({
+            password: newPass
+        })
+        .then(() => {
+            showSuccess("Đổi mật khẩu thành công! Đang chuyển về trang đăng nhập...");
+            
+            setTimeout(function () {
+                window.location.href = "dangnhap.html";
+            }, 1500);
+        })
+        .catch((error) => {
+            show
