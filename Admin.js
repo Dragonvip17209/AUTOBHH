@@ -144,28 +144,61 @@ function loadOrders() {
 }
 
 // ================= 3. QUẢN LÝ NGƯỜI DÙNG =================
+// ================= 3. QUẢN LÝ NGƯỜI DÙNG (Firebase Realtime Database) =================
+
 function loadUsers() {
-    const users = JSON.parse(localStorage.getItem("users")) || [];
     const tbody = document.getElementById("user-table-body");
-
     if (!tbody) return;
-    tbody.innerHTML = "";
 
-    users.forEach((u, i) => {
-        tbody.innerHTML += `
-        <tr>
-            <td>${i + 1}</td>
-            <td>${u.fullName}</td>
-            <td>${u.email}</td>
-            <td>${u.phone}</td>
-            <td>${u.password}</td>
-            <td>
-                <button class="btn-delete" onclick="deleteUser(${i})">Xóa</button>
-            </td>
-        </tr>`;
+    // Hiển thị thông báo đang tải dữ liệu ban đầu
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; font-style:italic;">Đang tải danh sách thành viên...</td></tr>`;
+
+    const usersRef = window.database.ref("users");
+    
+    // Tắt các sự kiện lắng nghe cũ tránh bị lặp (giống cách làm ở loadCars)
+    usersRef.off();
+
+    // Lắng nghe dữ liệu thời gian thực từ nhánh "users"
+    usersRef.on("value", (snapshot) => {
+        tbody.innerHTML = "";
+        const usersData = snapshot.val();
+
+        if (!usersData) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Chưa có khách hàng nào đăng ký.</td></tr>`;
+            return;
+        }
+
+        let index = 1;
+        // Duyệt qua từng bản ghi trong Object trả về từ Firebase
+        Object.keys(usersData).forEach((key) => {
+            const u = usersData[key];
+            tbody.innerHTML += `
+            <tr>
+                <td>${index++}</td>
+                <td>${u.fullName || "N/A"}</td>
+                <td>${u.email || "N/A"}</td>
+                <td>${u.phone || "N/A"}</td>
+                <td>${u.password || "N/A"}</td>
+                <td>
+                    <button class="btn-delete" onclick="deleteFirebaseUser('${key}')">Xóa</button>
+                </td>
+            </tr>`;
+        });
+    }, (error) => {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Lỗi tải dữ liệu: ${error.message}</td></tr>`;
     });
 }
+function deleteFirebaseUser(key) {
+    if (!confirm("Bạn có chắc chắn muốn xóa thành viên này khỏi hệ thống?")) return;
 
+    window.database.ref("users/" + key).remove()
+        .then(() => {
+            alert("Đã xóa tài khoản thành công!");
+        })
+        .catch((error) => {
+            alert("Lỗi khi xóa tài khoản: " + error.message);
+        });
+}
 function deleteUser(i) {
     let users = JSON.parse(localStorage.getItem("users")) || [];
     if (!confirm("Bạn có chắc chắn muốn xóa user này?")) return;
