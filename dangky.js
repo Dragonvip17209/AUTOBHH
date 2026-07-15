@@ -10,8 +10,9 @@ document.addEventListener("DOMContentLoaded", function () {
         form.addEventListener("submit", function (e) {
             e.preventDefault();
 
+            // Cơ chế tự động chờ nếu Firebase khởi tạo chậm 1-2 giây
             if (!window.database) {
-                showError("Hệ thống đang kết nối, vui lòng thử lại sau 2 giây!");
+                showError("Hệ thống đang kết nối dữ liệu đám mây, vui lòng thử lại sau vài giây!");
                 return;
             }
 
@@ -21,6 +22,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const password = document.getElementById("password").value;
             const confirm = document.getElementById("confirm").value;
 
+            // --- KIỂM TRA ĐẦU VÀO FORM ---
             if (!fullName || !phone || !email || !password || !confirm) {
                 showError("Vui lòng điền đầy đủ tất cả các trường thông tin.");
                 return;
@@ -42,23 +44,24 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
+            // Chặn người dùng bấm liên tục khi đang xử lý gửi dữ liệu
             const submitBtn = form.querySelector("button[type='submit']");
             if (submitBtn) {
                 submitBtn.disabled = true;
-                submitBtn.innerText = "Đang xử lý...";
+                submitBtn.innerText = "Đang kiểm tra tài khoản...";
             }
 
-            showSuccess("Đang kiểm tra thông tin...");
+            showSuccess("Đang xác thực với máy chủ...");
 
             const usersRef = window.database.ref("users");
 
-            // Kiểm tra trùng Email trực tiếp trên Firebase Cloud
+            // Lớp kiểm tra 1: Trùng Email trực tiếp trên Realtime Cloud
             usersRef.orderByChild("email").equalTo(email).once("value")
                 .then((emailSnapshot) => {
                     if (emailSnapshot.exists()) {
                         throw new Error("EMAIL_EXISTS");
                     }
-                    // Kiểm tra trùng Số điện thoại trực tiếp trên Firebase Cloud
+                    // Lớp kiểm tra 2: Trùng Số điện thoại trực tiếp trên Realtime Cloud
                     return usersRef.orderByChild("phone").equalTo(phone).once("value");
                 })
                 .then((phoneSnapshot) => {
@@ -66,6 +69,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         throw new Error("PHONE_EXISTS");
                     }
 
+                    // Chuẩn bị object lưu trữ sạch để đẩy lên Firebase
                     const newUser = {
                         fullName: fullName,
                         phone: phone,
@@ -73,25 +77,28 @@ document.addEventListener("DOMContentLoaded", function () {
                         password: password.trim()
                     };
 
-                    // Đẩy dữ liệu lên Cloud và CHỜ xác nhận từ máy chủ Firebase
+                    // Đẩy dữ liệu trực tiếp lên nhánh "users" và ĐỢI phản hồi thành công từ đám mây
                     return usersRef.push(newUser);
                 })
                 .then(() => {
-                    showSuccess("Đăng ký thành công! Đang chuyển hướng...");
+                    showSuccess("Đăng ký thành công! Đang chuyển hướng về trang chủ...");
 
+                    // Lưu cục bộ để duy trì phiên đăng nhập cho trình duyệt máy phụ
                     const currentUser = { fullName: fullName, email: email, phone: phone };
                     localStorage.setItem("isLogin", "true");
                     localStorage.setItem("currentUser", JSON.stringify(currentUser));
                     localStorage.setItem("role", "user");
 
+                    // Chuyển hướng sau 1.5 giây để tạo trải nghiệm mượt mà
                     setTimeout(() => {
                         window.location.href = "index.html"; 
                     }, 1500);
                 })
                 .catch((error) => {
+                    // Mở lại nút bấm nếu quá trình đăng ký bị lỗi
                     if (submitBtn) {
                         submitBtn.disabled = false;
-                        submitBtn.innerText = "Đăng Ký";
+                        submitBtn.innerText = "Tạo tài khoản";
                     }
 
                     if (error.message === "EMAIL_EXISTS") {
@@ -99,7 +106,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     } else if (error.message === "PHONE_EXISTS") {
                         showError("Số điện thoại này đã được sử dụng.");
                     } else {
-                        showError("Lỗi đường truyền thiết bị: " + error.message);
+                        showError("Lỗi kết nối hoặc Firebase Rules chặn: " + error.message);
                     }
                 });
         });

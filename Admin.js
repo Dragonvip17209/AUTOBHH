@@ -165,7 +165,7 @@ function loadUsers() {
         console.log("Dữ liệu Users nhận được từ Firebase:", usersData);
 
         if (!usersData) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: #ff9800;">Firebase kết nối OK nhưng chưa có ai đăng ký.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: #ff9800;"> chưa có ai đăng ký.</td></tr>`;
             return;
         }
 
