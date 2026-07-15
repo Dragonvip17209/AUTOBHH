@@ -142,21 +142,19 @@ function loadOrders() {
         </tr>`;
     });
 }
-// ================= 3. QUẢN LÝ NGƯỜI DÙNG (Bản sửa lỗi kết nối & tự động tìm nhánh) =================
+
+// ================= 3. QUẢN LÝ NGƯỜI DÙNG =================
 function loadUsers() {
     const tbody = document.getElementById("user-table-body");
     if (!tbody) return;
 
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; font-style:italic;">Đang kết nối tới máy chủ Firebase...</td></tr>`;
 
-    // CHỐNG CRASH: Đợi 1 giây nếu Firebase chưa khởi tạo xong
     if (!window.database) {
         setTimeout(loadUsers, 1000);
         return;
     }
 
-    // Thử đọc đồng thời cả 2 nhánh đề phòng bạn viết lệch chữ hoa/thường: "users" hoặc "Users"
-    // Thường mặc định là "users"
     const usersRef = window.database.ref("users");
     usersRef.off();
 
@@ -164,11 +162,10 @@ function loadUsers() {
         tbody.innerHTML = "";
         const usersData = snapshot.val();
 
-        // LOG ĐỂ BẠN KIỂM TRA TRONG TAB CONSOLE (F12)
         console.log("Dữ liệu Users nhận được từ Firebase:", usersData);
 
         if (!usersData) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: #ff9800;">Firebase kết nối OK nhưng nhánh "users" đang trống rỗng (Chưa có ai đăng ký thành công).</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: #ff9800;">Firebase kết nối OK nhưng chưa có ai đăng ký.</td></tr>`;
             return;
         }
 
@@ -192,6 +189,25 @@ function loadUsers() {
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red; font-weight:bold;">Lỗi bảo mật Rules hoặc cấu hình: ${error.message}</td></tr>`;
     });
 }
+
+// ✨ BỔ SUNG HÀM XÓA USER TRÊN MÁY CHỦ FIREBASE TOÀN CỤC
+window.deleteFirebaseUser = function(key) {
+    if (!confirm("Bạn có chắc chắn muốn xóa tài khoản người dùng này không?")) return;
+
+    if (!window.database) {
+        alert("Hệ thống chưa kết nối xong với Firebase!");
+        return;
+    }
+
+    window.database.ref("users/" + key).remove()
+        .then(() => {
+            alert("Đã xóa tài khoản người dùng thành công!");
+        })
+        .catch((error) => {
+            alert("Không thể xóa user: " + error.message);
+        });
+};
+
 // ================= 4. QUẢN LÝ SẢN PHẨM / XE (Firebase Realtime) =================
 function saveProduct(e) {
     e.preventDefault();
@@ -223,6 +239,12 @@ function saveProduct(e) {
             isSaving = false;
             resetProductForm();
         }).catch(() => { isSaving = false; });
+        return;
+    }
+
+    if (!file) {
+        alert("Vui lòng chọn hình ảnh cho xe!");
+        isSaving = false;
         return;
     }
 
@@ -259,7 +281,6 @@ function resetProductForm() {
     showTab("xe");
 }
 
-// ---------------- LOAD XE & TÍCH HỢP DATASET ĐỂ PHÂN TRANG ----------------
 function loadCars() {
     const container = document.getElementById("admin-car-list");
     if (!container) return;
@@ -268,7 +289,7 @@ function loadCars() {
     productsRef.off();
 
     productsRef.on("value", (snapshot) => {
-        container.innerHTML = "";
+        container.innerHTML = ""; // 👍 FIX LỖI: Reset danh sách cũ để chống lặp thẻ xe khi update
         const productsData = snapshot.val();
         
         if (!productsData) {
@@ -278,7 +299,6 @@ function loadCars() {
             return;
         }
 
-        // Render toàn bộ xe ra HTML, mặc định đặt dataset.show = "true"
         Object.keys(productsData).forEach((key) => {
             const car = productsData[key];
             
@@ -304,21 +324,17 @@ function loadCars() {
             </div>`;
         });
 
-        // Mỗi lần Firebase tải/cập nhật dữ liệu, chạy lại bộ lọc tìm kiếm & phân trang
         timKiemXe();
     });
 }
 
-function deleteCar(key) {
+// Đăng ký toàn cục các hàm gọi từ thuộc tính HTML inline (onclick) để tránh lỗi scope trên môi trường module/online
+window.deleteCar = function(key) {
     if (!confirm("Bạn có chắc muốn xóa xe này khỏi hệ thống?")) return;
+    window.database.ref("products/" + key).remove().then(() => { alert("Đã xóa xe khỏi hệ thống!"); });
+};
 
-    window.database.ref("products/" + key).remove()
-    .then(() => {
-        alert("Đã xóa xe khỏi hệ thống!");
-    });
-}
-
-function editCar(key) {
+window.editCar = function(key) {
     window.database.ref("products/" + key).once("value").then((snapshot) => {
         const car = snapshot.val();
         if (!car) return;
@@ -342,9 +358,9 @@ function editCar(key) {
         document.getElementById("btn-submit-form").innerText = "Cập Nhật Xe";
         document.getElementById("p-img").required = false;
     });
-}
+};
 
-// ---------------- 5. LOGIC TÌM KIẾM XE ----------------
+// ================= 5. LOGIC TÌM KIẾM XE =================
 function timKiemXe() {
     const searchInput = document.getElementById("timkiemxe");
     const keyword = searchInput ? searchInput.value.toLowerCase().trim() : "";
@@ -361,7 +377,6 @@ function timKiemXe() {
         }
     });
 
-    // Reset về trang 1 mỗi khi từ khóa tìm kiếm thay đổi
     currentPage = 1;
     pageGroup = 0;
 
@@ -369,28 +384,26 @@ function timKiemXe() {
     taoPagination();
 }
 
-// ---------------- 6. LOGIC HIỂN THỊ TRANG ----------------
+// ================= 6. LOGIC HIỂN THỊ TRANG =================
 function hienThiTrang(page) {
     const cards = [...document.querySelectorAll("#admin-car-list .the")]
         .filter(card => card.dataset.show === "true");
 
     const totalCards = cards.length;
     
-    // Ẩn toàn bộ thẻ xe trước
     document.querySelectorAll("#admin-car-list .the").forEach(card => card.style.display = "none");
 
-    // Chỉ hiển thị các thẻ xe thuộc trang hiện tại
     const startIndex = (page - 1) * cardsPerPage;
     const endIndex = Math.min(startIndex + cardsPerPage, totalCards);
 
     for (let i = startIndex; i < endIndex; i++) {
         if (cards[i]) {
-            cards[i].style.display = "block"; // Hoặc "flex" tùy thuộc CSS layout của bạn
+            cards[i].style.display = "block";
         }
     }
 }
 
-// ---------------- 7. LOGIC TẠO THANH PHÂN TRANG (PAGINATION) ----------------
+// ================= 7. LOGIC TẠO THANH PHÂN TRANG (PAGINATION) =================
 function taoPagination() {
     const cards = [...document.querySelectorAll("#admin-car-list .the")]
         .filter(card => card.dataset.show === "true");
@@ -401,10 +414,8 @@ function taoPagination() {
     
     chuyentrang.innerHTML = "";
 
-    // Nếu không có sản phẩm nào hoặc chỉ có 1 trang thì không hiện thanh phân trang
     if (totalPages <= 1) return;
 
-    // Nút BACK (<) di chuyển group trang
     if (pageGroup > 0) {
         const prev = document.createElement("button");
         prev.innerHTML = "&lt;";
@@ -420,7 +431,6 @@ function taoPagination() {
     const startPage = pageGroup * maxPageShow + 1;
     const endPage = Math.min(startPage + maxPageShow - 1, totalPages);
 
-    // Tạo các nút số trang
     for (let i = startPage; i <= endPage; i++) {
         const btn = document.createElement("button");
         btn.innerHTML = i;
@@ -437,7 +447,6 @@ function taoPagination() {
         chuyentrang.appendChild(btn);
     }
 
-    // Nút NEXT (>) di chuyển group trang
     if (endPage < totalPages) {
         const next = document.createElement("button");
         next.innerHTML = "&gt;";
