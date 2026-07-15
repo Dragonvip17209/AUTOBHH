@@ -93,12 +93,24 @@ document.addEventListener("DOMContentLoaded", function () {
                     return window.database.ref("users").push(newUser);
                 })
                 .then(() => {
-                    showSuccess("Đăng ký tài khoản thành công! Đang chuyển hướng...");
+    // 1. Đổi thông báo và chuyển hướng thẳng sang index.html (trang chủ) vì đã có data đăng nhập
+    showSuccess("Đăng ký tài khoản thành công! Đang chuyển hướng về trang chủ...");
 
-                    setTimeout(() => {
-                        window.location.href = "dangnhap.html";
-                    }, 2000);
-                })
+    // 2. TỰ ĐỘNG ĐĂNG NHẬP LUÔN CHO KHÁCH HÀNG
+    const currentUser = {
+        fullName: fullName,
+        email: email,
+        phone: phone
+    };
+    localStorage.setItem("isLogin", "true");
+    localStorage.setItem("currentUser", JSON.stringify(currentUser));
+    localStorage.setItem("role", "user"); // Lưu thêm role để đồng bộ với file dangnhap.js của bạn
+
+    // 3. Đá thẳng về trang chủ sau 2 giây
+    setTimeout(() => {
+        window.location.href = "index.html"; 
+    }, 1);
+})
                 .catch((error) => {
                     // Mở lại nút bấm khi gặp lỗi để người dùng sửa thông tin và gửi lại
                     if (submitBtn) {

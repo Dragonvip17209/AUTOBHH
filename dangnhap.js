@@ -34,7 +34,17 @@ document.addEventListener("DOMContentLoaded", function () {
             `;
         }
     }
-
+// TỰ ĐỘNG CHUYỂN HƯỚNG NẾU ĐÃ ĐĂNG NHẬP RỒI
+if (isLogin === "true" && currentUser) {
+    // Nếu là admin, đẩy về trang admin
+    if (localStorage.getItem("role") === "admin") {
+        window.location.href = "Admin.html";
+    } else {
+        // Nếu là user thường, đẩy về trang chủ
+        window.location.href = "index.html"; 
+    }
+    return; // Dừng thực thi các đoạn code phía dưới form
+}
     // ================= 2. XỬ LÝ ĐĂNG NHẬP (FIREBASE) =================
     function thucHienDangNhap() {
         // KIỂM TRA ĐỀ PHÒNG FIREBASE CHƯA TẢI XONG
